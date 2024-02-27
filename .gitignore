@@ -1,0 +1,6 @@
+.ads/
+.settings/
+.cproject
+.project
+/*Debug*/
+.vscode/
