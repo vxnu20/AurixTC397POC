@@ -1,6 +1,8 @@
+/* Includes */
 #include <IfxPort.h>
 #include <Bsp.h>
 
+/* Macros */
 /* LED D107: Port, Pin definition       */
 
 // #define LED1   &MODULE_P33,4
@@ -12,10 +14,10 @@
 // #define LED7   &MODULE_P20,13
 #define LED8   &MODULE_P20,14
 
-
 /* Delay wait time */
                                           
 #define WAIT_TIME   500
 
+/* Function Declarations */
 void LED_init();
 void LED_Toggle();
