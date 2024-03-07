@@ -28,6 +28,13 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
+#ifdef UART_VCOM_H_
+#include "src/uart/Aurix_uart.h"
+#endif
+
+/* Function declaration */
+void init();
+
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 void core0_main(void)
@@ -44,10 +51,21 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
-    LED_init();
-    
+    /* Trigger driver Init*/
+    init();
+
     while(1)
     {
         LED_Toggle();
+        send_UART_message();    /* Send the message "Hello World!"  */
+
     }
+}
+
+/* init functions */
+void init()
+{
+    LED_init();             /* Initialize led module            */
+    init_UART();            /* Initialize uart module            */
+
 }
