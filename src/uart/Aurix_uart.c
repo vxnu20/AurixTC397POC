@@ -1,10 +1,31 @@
 #include "Aurix_uart.h"
 
-IFX_INTERRUPT(asclin0_Tx_ISR, 0, INTPRIO_ASCLIN0_TX);                         /* Adding the Interrupt Service Routine */
+/*
+ * IFX_INTERRUPT(isr, vectabNum, priority)
+ *  - isr: Name of the ISR function.
+ *  - vectabNum: Vector table number.
+ *  - priority: Interrupt priority. Refer Usage of Interrupt Macro for more details.
+*/
+
+IFX_INTERRUPT(asclin0_Tx_ISR, 0, ISR_PRIORITY_ASCLIN_TX);
 
 void asclin0_Tx_ISR(void)
 {
     IfxAsclin_Asc_isrTransmit(&g_asc);
+}
+
+IFX_INTERRUPT(asclin0_Rx_ISR, 0, ISR_PRIORITY_ASCLIN_RX);
+
+void asclin0_Rx_ISR(void)
+{
+    IfxAsclin_Asc_isrTransmit(&g_asc);
+}
+
+IFX_INTERRUPT(asc0ErrISR, 0, ISR_PRIORITY_ASCLIN_ER);
+
+void asc0ErrISR(void)
+{
+    IfxStdIf_DPipe_onError(&g_asc);
 }
 
 void init_UART(void)
@@ -15,14 +36,25 @@ void init_UART(void)
 
     /* Set the desired baud rate */
     ascConfig.baudrate.baudrate = SERIAL_BAUDRATE;
+    /* Set the oversampling factor      */
+    ascConfig.baudrate.oversampling = IfxAsclin_OversamplingFactor_16;    
+
+    /* Configure the sampling mode */
+    ascConfig.bitTiming.medianFilter = IfxAsclin_SamplesPerBit_three;             /* Set the number of samples per bit*/
+    ascConfig.bitTiming.samplePointPosition = IfxAsclin_SamplePointPosition_8;    /* Set the first sample position    */
+
 
     /* ISR priorities and interrupt target */
-    ascConfig.interrupt.txPriority = INTPRIO_ASCLIN0_TX;
+    ascConfig.interrupt.txPriority = ISR_PRIORITY_ASCLIN_TX;
+    ascConfig.interrupt.rxPriority = ISR_PRIORITY_ASCLIN_RX;
+    ascConfig.interrupt.erPriority = ISR_PRIORITY_ASCLIN_ER;
     ascConfig.interrupt.typeOfService = IfxCpu_Irq_getTos(IfxCpu_getCoreIndex());
 
     /* FIFO configuration */
     ascConfig.txBuffer = &g_ascTxBuffer;
     ascConfig.txBufferSize = ASC_TX_BUFFER_SIZE;
+    ascConfig.rxBuffer = &g_ascRxBuffer;
+    ascConfig.rxBufferSize = ASC_RX_BUFFER_SIZE;
 
     /* Port pins configuration */
     const IfxAsclin_Asc_Pins pins =
@@ -35,13 +67,12 @@ void init_UART(void)
     };
     ascConfig.pins = &pins;
 
-    IfxAsclin_Asc_initModule(&g_asc, &ascConfig);                       /* Initialize module with above parameters  */
+    /* Initialize module with above parameters  */
+    IfxAsclin_Asc_initModule(&g_asc, &ascConfig);     
 }
 
-void send_UART_message(void)
+void process_UART(void)
 {
-    uint8 txData[] = "Hello World!";                                            /* Message to send      */
-    Ifx_SizeT count = 12;                                                       /* Size of the message  */
-    IfxAsclin_Asc_write(&g_asc, txData, &count, TIME_INFINITE);                 /* Transfer of data     */
-    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, WAIT_TIME));    /* Wait 2 seconds       */
+    IfxAsclin_Asc_write(&g_asc, g_txData, &g_count, TIME_INFINITE);   /* Transmit data via TX */
+    //IfxAsclin_Asc_read(&g_asc, g_rxData, &g_count, TIME_INFINITE); 
 }

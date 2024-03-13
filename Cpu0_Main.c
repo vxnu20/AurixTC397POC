@@ -56,8 +56,8 @@ void core0_main(void)
 
     while(1)
     {
-        LED_Toggle();
-        send_UART_message();    /* Send the message "Hello World!"  */
+        LED_Toggle();           /* Toggle the LED               */
+        process_UART();         /* UART main process function   */
 
     }
 }
